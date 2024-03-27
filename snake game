@@ -1,0 +1,139 @@
+import pygame
+import time
+import random
+
+# Initialize pygame
+pygame.init()
+
+# Set screen dimensions
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+
+# Set colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (213, 50, 80)
+GREEN = (0, 255, 0)
+BLUE = (50, 153, 213)
+
+# Set snake and apple sizes
+BLOCK_SIZE = 20
+APPLE_SIZE = 30
+
+# Set game speed
+SPEED = 20
+
+# Set fonts
+font_style = pygame.font.SysFont(None, 50)
+score_font = pygame.font.SysFont(None, 30)
+
+# Function to draw snake
+def draw_snake(block_size, snake_list):
+    for x in snake_list:
+        pygame.draw.rect(game_display, BLACK, [x[0], x[1], block_size, block_size])
+
+
+# Function to display message on screen
+def message(msg, color, score=None):
+    mesg = font_style.render(msg, True, color)
+    game_display.blit(mesg, [SCREEN_WIDTH / 6, SCREEN_HEIGHT / 3])
+    if score is not None:
+        score_text = score_font.render("Your Score: " + str(score), True, BLACK)
+        game_display.blit(score_text, [SCREEN_WIDTH / 3, SCREEN_HEIGHT / 2])
+
+
+# Main game loop
+def game_loop():
+    game_exit = False
+    game_over = False
+
+    # Set initial snake position and speed
+    lead_x = SCREEN_WIDTH / 2
+    lead_y = SCREEN_HEIGHT / 2
+    lead_x_change = 0
+    lead_y_change = 0
+
+    snake_list = []
+    snake_length = 1
+
+    # Set initial apple position
+    rand_apple_x = round(random.randrange(0, SCREEN_WIDTH - APPLE_SIZE) / 20.0) * 20
+    rand_apple_y = round(random.randrange(0, SCREEN_HEIGHT - APPLE_SIZE) / 20.0) * 20
+
+    score = 0
+
+    while not game_exit:
+
+        while game_over:
+            game_display.fill(WHITE)
+            message("You lost! Press Q to quit or C to play again", RED, score)
+            pygame.display.update()
+
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        game_exit = True
+                        game_over = False
+                    elif event.key == pygame.K_c:
+                        game_loop()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_exit = True
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    lead_x_change = -BLOCK_SIZE
+                    lead_y_change = 0
+                elif event.key == pygame.K_RIGHT:
+                    lead_x_change = BLOCK_SIZE
+                    lead_y_change = 0
+                elif event.key == pygame.K_UP:
+                    lead_y_change = -BLOCK_SIZE
+                    lead_x_change = 0
+                elif event.key == pygame.K_DOWN:
+                    lead_y_change = BLOCK_SIZE
+                    lead_x_change = 0
+
+        if lead_x >= SCREEN_WIDTH or lead_x < 0 or lead_y >= SCREEN_HEIGHT or lead_y < 0:
+            game_over = True
+
+        lead_x += lead_x_change
+        lead_y += lead_y_change
+
+        game_display.fill(WHITE)
+
+        pygame.draw.rect(game_display, RED, [rand_apple_x, rand_apple_y, APPLE_SIZE, APPLE_SIZE])
+
+        snake_head = []
+        snake_head.append(lead_x)
+        snake_head.append(lead_y)
+        snake_list.append(snake_head)
+        if len(snake_list) > snake_length:
+            del snake_list[0]
+
+        for segment in snake_list[:-1]:
+            if segment == snake_head:
+                game_over = True
+
+        draw_snake(BLOCK_SIZE, snake_list)
+
+        pygame.display.update()
+
+        if lead_x == rand_apple_x and lead_y == rand_apple_y:
+            rand_apple_x = round(random.randrange(0, SCREEN_WIDTH - APPLE_SIZE) / 20.0) * 20
+            rand_apple_y = round(random.randrange(0, SCREEN_HEIGHT - APPLE_SIZE) / 20.0) * 20
+            snake_length += 1
+            score += 1
+
+        clock.tick(SPEED)
+
+    pygame.quit()
+    quit()
+
+
+# Set up display and clock
+game_display = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption('Snake Game')
+clock = pygame.time.Clock()
+
+game_loop()
